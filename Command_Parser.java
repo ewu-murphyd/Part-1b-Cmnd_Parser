@@ -31,17 +31,17 @@ public class Command_Parser {
 		
 		else if(str.substring(0,8).equals("POPULATE"))
 		{
-			//populateString(str.substring(9));
+			populateString(str.substring(9));
 		}
 		
 		else if(str.substring(0,2).equals("DO"))
 		{
-			//doString(str.substring(3));
+			doString(str.substring(3));
 		}
 		
 		else if(str.substring(0,3).equals("@DO"))
 		{
-			//@doString(str.substring(4));
+			ATdoString(str.substring(4));
 		}
 		
 		else if(str.substring(0,3).equals("SET"))
@@ -250,7 +250,13 @@ public class Command_Parser {
 	
 	protected static void createString(String str)
 	{
-		List<List<String>> lists = new ArrayList<List<String>>(4);
+		List<List<String>> lists = new ArrayList<List<String>>();
+		List<String> decoy = new ArrayList<String>();
+		decoy.add("NOTHING");
+		lists.add(decoy);
+		lists.add(decoy);
+		lists.add(decoy);
+		lists.add(decoy);
 		List<String> commandLine = new ArrayList<String>();
 		String [] array=(str.split(" "));
 		
@@ -285,38 +291,48 @@ public class Command_Parser {
 			commandLine.add(tailhook);
 			counter++;
 			
-			lists.add(commandLine);
+			lists.set(0,commandLine);
 			
 			if(array.length-1>counter)
 			{
 				if(array[counter].equals("TANKS"))
 				{
 					List<String> tank = new ArrayList<String>();
-					String tanks = array[counter];
-					commandLine.add(tailhook);
-					lists.add(1,tank);
-				}
-				
-				else if(array[counter].equals("OVERRIDING"))
-				{
-					List<String> tank = new ArrayList<String>();
-					counter = easyParse(tank,array,"WITH",counter);
-					String with = array[counter];
 					counter++;
-					tank.add(with);
-					lists.add(2,tank);
+					while((array.length>counter) && (!array[counter].equals("OVERRIDING") && !array[counter].equals("AT")))
+					{
+						String tanks = array[counter];
+						tank.add(tanks);
+						counter++;
+					}
+					lists.set(1,tank);
 				}
 				
-				else if(array[counter].equals("AT"))
+				if((array.length>counter) && array[counter].equals("OVERRIDING"))
+				{
+					List<String> over = new ArrayList<String>();
+					counter++;
+					counter = easyParse(over,array,"WITH",counter);
+					while((array.length>counter) && !array[counter].equals("AT"))
+					{
+						String withs = array[counter];
+						over.add(withs);
+						counter++;
+					}
+
+					lists.set(2,over);
+				}
+				
+				if((array.length>counter) && array[counter].equals("AT"))
 				{
 					List<String> coord = new ArrayList<String>();
-					counter = easyParse(coord,array,"ALTITUDE",(counter+1));
+					counter = easyParse(coord,array,"ALTITUDE",(counter+2));
 					counter = easyParse(coord,array,"HEADING",counter);
 					counter = easyParse(coord,array,"SPEED",counter);
 					String speed = array[counter];
 					counter++;
 					coord.add(speed);
-					lists.add(3,coord);
+					lists.set(3,coord);
 				}
 						
 			}
@@ -425,7 +441,15 @@ public class Command_Parser {
 			String tid = array[counter];
 			commandLine.add(tid);
 		}
-		
+		System.out.println(commandLine.size());
+		for(int x=0;x<lists.size();x++)
+		{
+			for(int y=0;y<lists.get(x).size();y++)
+			{
+				System.out.println(lists.get(x).get(y));
+
+			}
+		}
 	}//end of CREATE'S
 	
 	protected static void populateString(String str)
@@ -471,6 +495,169 @@ public class Command_Parser {
 				String tid = array[counter];
 				commandLine.add(tid);
 				counter++;
+			}
+		}
+	}//end of populateString
+	
+	protected static void doString(String str)
+	{
+		List<String> commandLine = new ArrayList<String>();
+		String [] array=(str.split(" "));
+		int counter=0;
+		
+		//get aid
+		commandLine.add(array[0]);
+		counter++;
+		
+		if(array[counter].equals("ASK"))
+		{
+			//ask all
+			counter++;
+			commandLine.add(array[counter]);
+			
+		}
+		
+		else if(array[counter].equals("POSITION"))
+		{
+			//ask POSITION
+		}
+		
+		else if(array[counter].equals("BARRIER"))
+		{
+			//ask BARRIER
+			counter++;
+			commandLine.add(array[counter]);
+		}
+		
+		else if(array[counter].equals("CATAPULT"))
+		{
+			//ask 
+			counter+=4;
+			commandLine.add(array[counter]);
+		}
+		
+		else if(array[counter].equals("SET"))
+		{
+			counter++;
+			if(array[counter].equals("SPEED"))
+			{
+				//ask 
+				counter++;
+				commandLine.add(array[counter]);
+			}
+			
+			else if(array[counter].equals("ALTITUDE"))
+			{
+				counter++;
+				commandLine.add(array[counter]);
+			}
+			
+			else if(array[counter].equals("HEADING"))
+			{
+				counter++;
+				commandLine.add(array[counter]);
+				commandLine.add(array[(counter+1)]);
+			}
+
+		}//end of SET
+		
+		else if(array[counter].equals("TAILHOOK"))
+		{
+			//ask 
+			counter++;
+			commandLine.add(array[counter]);
+		}
+		
+		else if(array[counter].equals("CATAPULT"))
+		{
+			//ask OLS
+		}
+		
+		else if(array[counter].equals("BOOM"))
+		{
+			//ask BOOM
+			counter++;
+			commandLine.add(array[counter]);
+		}
+		
+		else if(array[counter].equals("TRANSFER"))
+		{
+			//ask TRANSFER
+			counter++;
+			commandLine.add(array[counter]);
+		}
+		for(int x=0;x<commandLine.size();x++)
+			System.out.println(commandLine.get(x));
+	}//end of doString
+	
+	protected static void ATdoString(String str)
+	{
+		List<String> commandLine = new ArrayList<String>();
+		String [] array=(str.split(" "));
+		int counter=0;
+		
+		//get aid
+		commandLine.add(array[0]);
+		counter++;
+		
+		if(array[counter].equals("FORCE"))
+		{
+			//NOT FOR ALL
+			if(array.length==4)
+			{
+				counter++;
+				if(array[counter].equals("COORDINATES"))
+				{
+					counter++;
+					commandLine.add(array[counter]);
+				}
+				
+				else if(array[counter].equals("ALTITUDE"))
+				{
+					counter++;
+					commandLine.add(array[counter]);
+				}
+				
+				else if(array[counter].equals("HEADING"))
+				{
+					counter++;
+					commandLine.add(array[counter]);
+				}
+				
+				else if(array[counter].equals("SPEED"))
+				{
+					counter++;
+					commandLine.add(array[counter]);
+				}
+			}
+			
+			//for ALL
+			else
+			{
+				counter++;
+				if(array[counter].equals("COORDINATES"))
+				{
+					counter++;
+					commandLine.add(1,array[counter]);
+				}
+				
+				else if(array[counter].equals("ALTITUDE"))
+				{
+					counter++;
+					commandLine.add(2,array[counter]);
+				}
+				
+				else if(array[counter].equals("HEADING"))
+				{
+					counter++;
+					commandLine.add(3,array[counter]);
+				}
+				
+				else if(array[counter].equals("SPEED"))
+				{
+					counter++;
+					commandLine.add(4,array[counter]);
+				}
 			}
 		}
 	}
