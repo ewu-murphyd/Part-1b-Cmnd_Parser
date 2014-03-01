@@ -3,6 +3,7 @@ package acg.project.cli.parser;
 import java.io.*;
 import java.util.*;
 
+import acg.architecture.datatype.Identifier;
 //import acg.architecture.view.glyph.loader.*;
 import acg.project.action.ActionSet;
 import acg.project.action.command.behavioral.*;
@@ -10,6 +11,7 @@ import acg.project.action.command.structural.*;
 import acg.project.action.command.creational.create.*;
 import acg.project.action.command.creational.define.*;
 import acg.project.action.command.miscellaneous.*;
+import acg.project.map.MapTemplate;
 
 public class CommandParser {
 	
@@ -30,72 +32,71 @@ public class CommandParser {
 	{
 		this.actionSet = aS;
 		this.command = cmd;
-		
 	}
 	
 	public void interpret(String str)
 	{
-		if(command.substring(0,6).equals("DEFINE"))
+		if(this.command.substring(0,6).equals("DEFINE"))
 		{
-			defineString(command.substring(7));
+			defineString(this.command.substring(7));
 		}
 		
-		else if(command.substring(0,6).equals("CREATE"))
+		else if(this.command.substring(0,6).equals("CREATE"))
 		{
-			createString(command.substring(7));
+			createString(this.command.substring(7));
 		}
 		
-		else if(command.substring(0,8).equals("POPULATE"))
+		else if(this.command.substring(0,8).equals("POPULATE"))
 		{
-			populateString(command.substring(9));
+			populateString(this.command.substring(9));
 		}
 		
-		else if(command.substring(0,2).equals("DO"))
+		else if(this.command.substring(0,2).equals("DO"))
 		{
-			doString(command.substring(3));
+			doString(this.command.substring(3));
 		}
 		
-		if(command.substring(0,3).equals("@DO"))
+		if(this.command.substring(0,3).equals("@DO"))
 		{
-			ATdoString(command.substring(4));
+			ATdoString(this.command.substring(4));
 		}
 		
-		else if(command.substring(0,3).equals("SET"))
+		else if(this.command.substring(0,3).equals("SET"))
 		{
-			setString(command.substring(4));
+			setString(this.command.substring(4));
 		}
 		
-		else if(command.substring(0,3).equals("GET"))
+		else if(this.command.substring(0,3).equals("GET"))
 		{
-			getString(command.substring(4));
+			getString(this.command.substring(4));
 		}
 		
-		else if(command.substring(0,8).equals("UNCREATE"))
+		else if(this.command.substring(0,8).equals("UNCREATE"))
 		{
-			uncreateString(command.substring(9));
+			uncreateString(this.command.substring(9));
 		}
 		
-		else if(command.substring(0,8).equals("DESCRIBE"))
+		else if(this.command.substring(0,8).equals("DESCRIBE"))
 		{
-			describeString(command.substring(9));
+			describeString(this.command.substring(9));
 		}
 		
-		else if(command.substring(0,4).equals("LIST"))
+		else if(this.command.substring(0,4).equals("LIST"))
 		{
 			//call list agents
 		}
 		
-		else if(command.substring(0,6).equals("COMMIT"))
+		else if(this.command.substring(0,6).equals("COMMIT"))
 		{
 			//commitString(command.substring(7));
 		}
 
-		else if(command.substring(0,6).equals("@CLOCK"))
+		else if(this.command.substring(0,6).equals("@CLOCK"))
 		{
 			//send for rate/pause/resume...
-			if(command.length()>6)
+			if(this.command.length()>6)
 			{
-				clockString(command.substring(7));
+				clockString(this.command.substring(7));
 			}
 			//string is just clock
 			else
@@ -104,19 +105,19 @@ public class CommandParser {
 			}
 		}
 		
-		else if(command.substring(0,4).equals("@RUN"))
+		else if(this.command.substring(0,4).equals("@RUN"))
 		{
-			runString(command.substring(5));
+			runString(this.command.substring(5));
 		}
 		
-		else if(command.substring(0,5).equals("@EXIT"))
+		else if(this.command.substring(0,5).equals("@EXIT"))
 		{
 			//EXIT COMMAND
 		}
 		
-		else if(command.substring(0,5).equals("@WAIT"))
+		else if(this.command.substring(0,5).equals("@WAIT"))
 		{
-			waitString(command.substring(6));
+			waitString(this.command.substring(6));
 		}
 	
 		/**
@@ -125,7 +126,7 @@ public class CommandParser {
 		 **/
 	}
 	
-	protected static void defineString(String str)
+	protected void defineString(String str)
 	{
 		List<String> commandLine = new ArrayList<String>();
 		String [] array=(str.split(" "));
@@ -147,9 +148,8 @@ public class CommandParser {
 				String miss = array[counter];
 				commandLine.add(miss);
 	
-				/*Identifier [] trapIdent = define_Trap(commandLine);
-				CommandCreationalDefineTrap ccDT = new CommandCreationalDefineTrap(trapIdent[0],trapIdent[1]);
-				getActionCreationalDefine(CCDT);*/
+				CommandCreationalDefineTrap ccDT = define_Trap(commandLine);
+				this.actionSet.getActionCreationalDefine().submit(ccDT);
 			}//end of TRAP
 			
 			else if(array[0].equals("CATAPULT"))
@@ -168,8 +168,9 @@ public class CommandParser {
 				commandLine.add(reset);
 				
 				//make object
-				
+				CommandCreationalDefineCatapult ccDC = define_Catapult(commandLine);
 				//submit
+				this.actionSet.getActionCreationalDefine().submit(ccDC);
 			}
 			
 			else if(array[0].equals("OLS_XMT"))
@@ -185,6 +186,10 @@ public class CommandParser {
 				//add the last value
 				String diameter = array[counter];
 				commandLine.add(diameter);
+				
+				CommandCreationalDefineOLSTransmitter ccDC = define_OLS_XMT(commandLine);
+				//submit
+				this.actionSet.getActionCreationalDefine().submit(ccDC);
 			}
 			
 			else if(array[0].equals("OLS_RCV"))
@@ -196,6 +201,10 @@ public class CommandParser {
 				//add the last value
 				String diameter = array[counter];
 				commandLine.add(diameter);
+				
+				CommandCreationalDefineOLSReceiver ccDC = define_OLS_RCV(commandLine);
+				//submit
+				this.actionSet.getActionCreationalDefine().submit(ccDC);
 			}
 			
 			else if(array[0].equals("CARRIER"))
@@ -211,6 +220,10 @@ public class CommandParser {
 				//add the last value
 				String layout = array[counter];
 				commandLine.add(layout);
+				
+				CommandCreationalDefineCarrier ccDC = define_Carrier(commandLine);
+				//submit
+				this.actionSet.getActionCreationalDefine().submit(ccDC);
 			}
 			
 			else if(array[0].equals("FIGHTER"))
@@ -231,6 +244,10 @@ public class CommandParser {
 				//parse through string and construct list
 				String delta = array[counter];
 				commandLine.add(delta);
+				
+				CommandCreationalDefineFighter ccDC = define_Fighter(commandLine);
+				//submit
+				this.actionSet.getActionCreationalDefine().submit(ccDC);
 			}
 			
 			else if(array[0].equals("TANKER"))
@@ -248,6 +265,10 @@ public class CommandParser {
 				//add the last value
 				String tank = array[counter];
 				commandLine.add(tank);
+				
+				CommandCreationalDefineTanker ccDC = define_Tanker(commandLine);
+				//submit
+				this.actionSet.getActionCreationalDefine().submit(ccDC);
 			}
 			
 			else if(array[0].equals("BOOM"))
@@ -265,6 +286,9 @@ public class CommandParser {
 					commandLine.add(flow);
 					
 					//send male boom object
+					CommandCreationalDefineBoomMale ccDC = define_Boom_Male(commandLine);
+					//submit
+					this.actionSet.getActionCreationalDefine().submit(ccDC);
 				}
 				
 				else
@@ -281,6 +305,9 @@ public class CommandParser {
 					commandLine.add(flow);
 					
 					//send female boom object
+					CommandCreationalDefineBoomFemale ccDC = define_Boom_Female(commandLine);
+					//submit
+					this.actionSet.getActionCreationalDefine().submit(ccDC);
 				}
 				
 			}
@@ -294,6 +321,10 @@ public class CommandParser {
 				//add the last value
 				String time = array[counter];
 				commandLine.add(time);
+				
+				CommandCreationalDefineTailhook ccDC = define_Tailhook(commandLine);
+				//submit
+				this.actionSet.getActionCreationalDefine().submit(ccDC);
 			}
 			
 			else if(array[0].equals("BARRIER"))
@@ -308,6 +339,10 @@ public class CommandParser {
 				//add the last value
 				String time = array[counter];
 				commandLine.add(time);
+				
+				CommandCreationalDefineBarrier ccDC = define_Barrier(commandLine);
+				//submit
+				this.actionSet.getActionCreationalDefine().submit(ccDC);
 			}
 			
 			else if(array[0].equals("AUX_TANK"))
@@ -319,16 +354,20 @@ public class CommandParser {
 				//add the last value
 				String amount = array[counter];
 				commandLine.add(amount);
+				
+				CommandCreationalDefineAuxiliaryTank ccDC = define_Aux_Tank(commandLine);
+				//submit
+				this.actionSet.getActionCreationalDefine().submit(ccDC);
 			}
 		}
 		
 		catch(Exception e)
 		{
-			System.out.println(e);
+			throw e;
 		}
 	}//end of DEFINE'S
 	
-	protected static void createString(String str)
+	protected void createString(String str)
 	{
 		List<List<String>> lists = new ArrayList<List<String>>();
 		List<String> decoy = new ArrayList<String>();
@@ -360,79 +399,94 @@ public class CommandParser {
 			//add the last value
 			String speed = array[counter];
 			commandLine.add(speed);
+			
+			CommandCreationalCreateCarrier ccCC = create_Carrier(commandLine);
+			//send object
+			this.actionSet.getActionCreationalCreate().submit(ccCC);
 		}
 		
 		else if(array[0].equals("FIGHTER"))
 		{
-			//parse through string and construct list
+			//work ID
 			int counter = 1;
 			counter =easyParse(commandLine,array,"FROM",counter);
 			counter =easyParse(commandLine,array,"WITH",counter);
 			counter =easyParse(commandLine,array,"BOOM",(counter+1));
 			counter =easyParse(commandLine,array,"TAILHOOK",counter);
 			//add the last value
+			for(int i = 0;i<4;i++)
+			{
+				lists.add(i,new ArrayList<String>(0));
+			}
 			String tailhook = array[counter];
-			commandLine.add(tailhook);
+			commandLine.add(0,tailhook);
 			counter++;
-			
-			//add commons to index 0
+
 			lists.set(0,commandLine);
 			
-			if(array.length-1>counter)
+			while(array.length-1>counter)
 			{
 				if(array[counter].equals("TANKS"))
 				{
+					int i = counter;
+					while(!array[i].equals("OVERRIDING")||!array[i].equals("AT"))
+					{
+						if(i == array.length-i)
+						{break;}
+						i++;
+					}
 					List<String> tank = new ArrayList<String>();
 					counter++;
-					//add all tanks
-					while((array.length>counter) && (!array[counter].equals("OVERRIDING") && !array[counter].equals("AT")))
+					for(int x =counter ;x<i;x++)
 					{
-						String tanks = array[counter];
-						tank.add(tanks);
-						counter++;
+						String tanks = array[x];
+						tank.add(tanks);	
 					}
-					//add tanks to index 1
+					counter++;
 					lists.set(1,tank);
 				}
-				
-				if((array.length>counter) && array[counter].equals("OVERRIDING"))
+
+				else if(array[counter].equals("OVERRIDING"))
 				{
-					List<String> over = new ArrayList<String>();
-					counter++;
-					//get first aid
-					counter = easyParse(over,array,"WITH",counter);
-					//add all OVERRIDES
-					while((array.length>counter) && !array[counter].equals("AT"))
+					int i = counter;
+					while(!array[i].equals("AT"))
 					{
-						String withs = array[counter];
-						
-						over.add(withs);
-						counter++;
-						//increase counter to the next index if it equals "WITH"
-						if(array.length>counter && array[counter].equals("WITH"))
-							counter++;
+						if(i == array.length-1)
+						{break;}
+						i++;
 					}
-					
-					//add override to index 2
-					lists.set(2,over);
+					List<String> tank = new ArrayList<String>();
+					counter++;
+					for(int x =counter ;x<i;)
+					{
+					counter = easyParse(tank,array,"WITH",counter);
+					String with = array[counter];
+					tank.add(with);
+					counter++;
+					x=counter;
+					}
+					lists.set(2,tank);
 				}
-				
-				if((array.length>counter) && array[counter].equals("AT"))
+
+				else if(array[counter].equals("COORDINATES"))
 				{
-					//parse through string and construct list
 					List<String> coord = new ArrayList<String>();
-					counter = easyParse(coord,array,"ALTITUDE",(counter+2));
+					counter++;
+					counter = easyParse(coord,array,"ALTITUDE",(counter));
 					counter = easyParse(coord,array,"HEADING",counter);
 					counter = easyParse(coord,array,"SPEED",counter);
 					String speed = array[counter];
 					counter++;
 					coord.add(speed);
-					
-					//set at coordinates to index 3
 					lists.set(3,coord);
 				}
-						
+				else{counter++;}
 			}
+		
+			
+			CommandCreationalCreateFighter ccCC = create_Fighter(lists);
+			//send object
+			this.actionSet.getActionCreationalCreate().submit(ccCC);
 		}
 		
 		else if(array[0].equals("TANKER"))
@@ -449,6 +503,10 @@ public class CommandParser {
 			//add the last value
 			String speed = array[counter];
 			commandLine.add(speed);
+			
+			CommandCreationalCreateTanker ccCC = create_Tanker(commandLine);
+			//send object
+			this.actionSet.getActionCreationalCreate().submit(ccCC);
 		}
 		
 		else if(array[0].equals("TRAP"))
@@ -460,6 +518,10 @@ public class CommandParser {
 			//add the last value
 			String tid = array[counter];
 			commandLine.add(tid);
+			
+			CommandCreationalCreateTrap ccCC = create_Tank(commandLine);
+			//send object
+			this.actionSet.getActionCreationalCreate().submit(ccCC);
 		}
 		
 		else if(array[0].equals("BARRIER"))
@@ -471,6 +533,10 @@ public class CommandParser {
 			//add the last value
 			String tid = array[counter];
 			commandLine.add(tid);
+			
+			CommandCreationalCreateBarrier ccCC = create_Barrier(commandLine);
+			//send object
+			this.actionSet.getActionCreationalCreate().submit(ccCC);
 		}
 		
 		else if(array[0].equals("AUX_TANK"))
@@ -482,6 +548,10 @@ public class CommandParser {
 			//add the last value
 			String tid = array[counter];
 			commandLine.add(tid);
+			
+			CommandCreationalCreateAuxiliaryTank ccCC = create_Aux_Tank(commandLine);
+			//send object
+			this.actionSet.getActionCreationalCreate().submit(ccCC);
 		}
 		
 		else if(array[0].equals("CATAPULT"))
@@ -493,6 +563,10 @@ public class CommandParser {
 			//add the last value
 			String tid = array[counter];
 			commandLine.add(tid);
+			
+			CommandCreationalCreateCatapult ccCC = create_Catapult(commandLine);
+			//send object
+			this.actionSet.getActionCreationalCreate().submit(ccCC);
 		}
 		
 		else if(array[0].equals("OLS_XMT"))
@@ -504,6 +578,10 @@ public class CommandParser {
 			//add the last value
 			String tid = array[counter];
 			commandLine.add(tid);
+			
+			CommandCreationalCreateOLSTransmitter ccCC = create_Ols_Xmt(commandLine);
+			//send object
+			this.actionSet.getActionCreationalCreate().submit(ccCC);
 		}
 		
 		else if(array[0].equals("OLS_RVC"))
@@ -515,6 +593,10 @@ public class CommandParser {
 			//add the last value
 			String tid = array[counter];
 			commandLine.add(tid);
+			
+			CommandCreationalCreateOLSReceiver ccCC = create_Ols_Rcv(commandLine);
+			//send object
+			this.actionSet.getActionCreationalCreate().submit(ccCC);
 		}
 		
 		else if(array[0].equals("BOOM"))
@@ -526,6 +608,32 @@ public class CommandParser {
 			//add the last value
 			String tid = array[counter];
 			commandLine.add(tid);
+			//?NEED MALE AND FEMALE
+			MapTemplate mP = this.actionSet.getMapTemplates();
+			Identifier id = new Identifier(tid);
+			
+			A_CommandCreationalDefineBoom temp;
+			try{
+				temp = (A_CommandCreationalDefineBoom) mP.getCommand(id);
+			}
+			
+			catch(Exception e)
+			{
+				throw e;
+			}
+			if(temp.isMale())
+			{
+				CommandCreationalCreateBoomMale ccCC = create_Boom_Male(commandLine);
+				this.actionSet.getActionCreationalCreate().submit(ccCC);
+
+			}
+			else
+			{
+				CommandCreationalCreateBoomFemale ccCC = create_Boom_Female(commandLine);
+				this.actionSet.getActionCreationalCreate().submit(ccCC);
+
+			}
+
 		}
 		
 		else if(array[0].equals("TAILHOOK"))
@@ -537,6 +645,10 @@ public class CommandParser {
 			//add the last value
 			String tid = array[counter];
 			commandLine.add(tid);
+			
+			CommandCreationalCreateTailhook ccCC = create_Tailhook(commandLine);
+			//send object
+			this.actionSet.getActionCreationalCreate().submit(ccCC);
 		}
 		System.out.println(commandLine.size());
 		for(int x=0;x<lists.size();x++)
@@ -549,7 +661,7 @@ public class CommandParser {
 		}
 	}//end of CREATE'S
 	
-	protected static void populateString(String str)
+	protected void populateString(String str)
 	{
 		List<String> commandLine = new ArrayList<String>();
 		String [] array=(str.split(" "));
@@ -567,6 +679,7 @@ public class CommandParser {
 			{
 				String tid = array[counter+1];
 				commandLine.add(tid);
+				
 			}
 			
 			//multiple fighters
@@ -580,6 +693,9 @@ public class CommandParser {
 					counter++;
 				}
 			}
+			
+			CommandStructuralPopulateCarrier csPC = populate_Carrier(commandLine);
+			this.actionSet.getActionStructural().submit(csPC);
 		}
 		
 		else if(array[0].equals("WORLD"))
@@ -595,11 +711,14 @@ public class CommandParser {
 				commandLine.add(tid);
 				counter++;
 			}
+			
+			CommandStructuralPopulateWorld csPC = populate_World(commandLine);
+			this.actionSet.getActionStructural().submit(csPC);
 		}
 		
 	}//end of populateString
 	
-	protected static void doString(String str)
+	protected void doString(String str)
 	{
 		List<String> commandLine = new ArrayList<String>();
 		String [] array=(str.split(" "));
@@ -616,11 +735,15 @@ public class CommandParser {
 			counter++;
 			commandLine.add(array[counter]);
 			
+			CommandBehavioralDoAsk cbDA = do_Ask(commandLine);
+			this.actionSet.getActionBehavioral().submit(cbDA);
 		}
 		
 		else if(array[counter].equals("POSITION"))
 		{
 			//ask POSITION
+			CommandBehavioralDoPosition cbDA = do_Position(commandLine);
+			this.actionSet.getActionBehavioral().submit(cbDA);
 		}
 		
 		else if(array[counter].equals("BARRIER"))
@@ -628,6 +751,9 @@ public class CommandParser {
 			//ask BARRIER
 			counter++;
 			commandLine.add(array[counter]);
+			
+			CommandBehavioralDoBarrier cbDA = do_Barrier(commandLine);
+			this.actionSet.getActionBehavioral().submit(cbDA);
 		}
 		
 		else if(array[counter].equals("CATAPULT"))
@@ -635,6 +761,9 @@ public class CommandParser {
 			//ask 
 			counter+=4;
 			commandLine.add(array[counter]);
+			
+			CommandBehavioralDoCatapult cbDA = do_Catapult(commandLine);
+			this.actionSet.getActionBehavioral().submit(cbDA);
 		}
 		
 		else if(array[counter].equals("SET"))
@@ -645,12 +774,18 @@ public class CommandParser {
 				//ask 
 				counter++;
 				commandLine.add(array[counter]);
+				
+				CommandBehavioralDoSetSpeed cbDA = do_Set_Speed(commandLine);
+				this.actionSet.getActionBehavioral().submit(cbDA);
 			}
 			
 			else if(array[counter].equals("ALTITUDE"))
 			{
 				counter++;
 				commandLine.add(array[counter]);
+				
+				CommandBehavioralDoSetAltitude cbDA = do_Set_Altitude(commandLine);
+				this.actionSet.getActionBehavioral().submit(cbDA);
 			}
 			
 			else if(array[counter].equals("HEADING"))
@@ -658,6 +793,9 @@ public class CommandParser {
 				counter++;
 				commandLine.add(array[counter]);
 				commandLine.add(array[(counter+1)]);
+				
+				CommandBehavioralDoSetHeading cbDA = do_Set_Heading(commandLine);
+				this.actionSet.getActionBehavioral().submit(cbDA);
 			}
 
 		}//end of SET
@@ -667,11 +805,16 @@ public class CommandParser {
 			//ask 
 			counter++;
 			commandLine.add(array[counter]);
+			
+			CommandBehavioralDoTailhook cbDA = do_Tailhook(commandLine);
+			this.actionSet.getActionBehavioral().submit(cbDA);
 		}
 		
 		else if(array[counter].equals("CATAPULT"))
 		{
 			//ask OLS
+			CommandBehavioralDoCatapult cbDA = do_Catapult(commandLine);
+			this.actionSet.getActionBehavioral().submit(cbDA);
 		}
 		
 		else if(array[counter].equals("BOOM"))
@@ -679,6 +822,9 @@ public class CommandParser {
 			//ask BOOM
 			counter++;
 			commandLine.add(array[counter]);
+			
+			CommandBehavioralDoBoom cbDA = do_Boom(commandLine);
+			this.actionSet.getActionBehavioral().submit(cbDA);
 		}
 		
 		else if(array[counter].equals("TRANSFER"))
@@ -686,11 +832,21 @@ public class CommandParser {
 			//ask TRANSFER
 			counter++;
 			commandLine.add(array[counter]);
+			
+			CommandBehavioralDoTransfer cbDA = do_Transfer(commandLine);
+			this.actionSet.getActionBehavioral().submit(cbDA);
+		}
+		
+		else if(array[counter].equals("CAPTURE"))
+		{
+			
+			CommandBehavioralDoCaptureOLS cbDA = do_Capture_Ols(commandLine);
+			this.actionSet.getActionBehavioral().submit(cbDA);
 		}
 
 	}//end of doString
 	
-	protected static void ATdoString(String str)
+	protected void ATdoString(String str)
 	{
 		List<List<String>> lists = new ArrayList<List<String>>();
 		List<String> decoy = new ArrayList<String>();
@@ -720,24 +876,36 @@ public class CommandParser {
 				{
 					counter++;
 					commandLine.add(array[counter]);
+					
+					CommandBehavioralDoForceCoordinates cbDF = do_Force_Coordinates(commandLine);
+					this.actionSet.getActionBehavioral().submit(cbDF);
 				}
 				
 				else if(array[counter].equals("ALTITUDE"))
 				{
 					counter++;
 					commandLine.add(array[counter]);
+					
+					CommandBehavioralDoForceAltitude cbDF = do_Force_Altitude(commandLine);
+					this.actionSet.getActionBehavioral().submit(cbDF);
 				}
 				
 				else if(array[counter].equals("HEADING"))
 				{
 					counter++;
 					commandLine.add(array[counter]);
+					
+					CommandBehavioralDoForceHeading cbDF = do_Force_Heading(commandLine);
+					this.actionSet.getActionBehavioral().submit(cbDF);
 				}
 				
 				else if(array[counter].equals("SPEED"))
 				{
 					counter++;
 					commandLine.add(array[counter]);
+					
+					CommandBehavioralDoForceSpeed cbDF = do_Force_Speed(commandLine);
+					this.actionSet.getActionBehavioral().submit(cbDF);
 				}
 			}
 			
@@ -792,16 +960,24 @@ public class CommandParser {
 						System.out.println(lists.get(x).get(y));
 					}
 				}
+				
+				CommandBehavioralDoForceAll cbDF = do_Force_All(commandLine);
+				this.actionSet.getActionBehavioral().submit(cbDF);
 			}
 		}
 	}//end of ATdoSting
 	
-	protected static void getString(String str)
+	protected void getString(String str)
 	{
+		//List<String> commandLine = new ArrayList<String>();
+		//String [] array=(str.split(" "));
+		
 		//get windConditions
+		CommandBehavioralGetWindConditions cbDF = get_Wind();
+		this.actionSet.getActionBehavioral().submit(cbDF);
 	}//end of getString
 	
-	protected static void setString(String str)
+	protected void setString(String str)
 	{
 		//set windConditions
 		String [] array = str.split(" ");
@@ -810,27 +986,31 @@ public class CommandParser {
 		if(array[counter].equals("DIRECTION"))
 		{
 			//SEND DIRECTION
+			CommandBehavioralSetWindDirection cbDF = set_Wind_Direction(commandLine);
+			this.actionSet.getActionBehavioral().submit(cbDF);
 		}
 		
 		else if(array[counter].equals("SPEED"))
 		{
 			//SEND SPEED
+			CommandBehavioralSetWindSpeed cbDF = set_Wind_Speed(commandLine);
+			this.actionSet.getActionBehavioral().submit(cbDF);
 		}
 	}//end of getString
 	
-	public static void uncreateString(String str)
+	public void uncreateString(String str)
 	{
 		//send tid which is remaining string
 		//uncreate(str);
 	}//end of uncreateString
 	
-	public static void describeString(String str)
+	public void describeString(String str)
 	{
 		//send tid which is remaining string
 		//describe(str);
 	}//end of describeString
 	
-	public static void clockString(String str)
+	public void clockString(String str)
 	{
 		String [] array=(str.split(" "));
 		int counter=0;
@@ -857,13 +1037,13 @@ public class CommandParser {
 		}
 	}//end of clockString
 	
-	public static void runString(String str)
+	public void runString(String str)
 	{
 		//send tid which is remaining string
 		//describe(str);
 	}//end of runString
 	
-	public static void waitString(String str)
+	public void waitString(String str)
 	{
 		//send tid which is remaining string
 		//describe(str);
