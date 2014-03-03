@@ -1000,7 +1000,9 @@ public class CommandParser {
 	
 	public void uncreateString(String str)
 	{
-		//send tid which is remaining string
+		//CHECK IF PART OF AN AGENT
+		
+		//IF NOT PART THEN UNCREATE
 		//uncreate(str);
 	}//end of uncreateString
 	
