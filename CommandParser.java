@@ -14,7 +14,7 @@ import acg.project.action.command.miscellaneous.*;
 import acg.project.map.MapTemplate;
 
 public class CommandParser {
-	
+	int commit = 0;
 	private ActionSet actionSet;
 	private String command;
 	
@@ -23,9 +23,13 @@ public class CommandParser {
 		Scanner kb = new Scanner(System.in);
 		System.out.println("Command--> ");
 		String s = kb.nextLine();
-	
-		//interpret(s);
-	
+		
+		/*ActionSet aS = new ActionSet(null);
+		CommandParser cP = new CommandParser();
+		cP.actionSet = aS;
+		cP.command=s;
+		cP.interpret();*/
+			
 	}//end of main
 
 	protected void CommandParser(ActionSet aS, String cmd)
@@ -34,8 +38,10 @@ public class CommandParser {
 		this.command = cmd;
 	}
 	
-	public void interpret(String str)
+	public void interpret()
 	{
+		try
+		{
 		if(this.command.substring(0,6).equals("DEFINE"))
 		{
 			defineString(this.command.substring(7));
@@ -84,11 +90,15 @@ public class CommandParser {
 		else if(this.command.substring(0,4).equals("LIST"))
 		{
 			//call list agents
+			CommandCreationalListAgents ccLA = new CommandCreationalListAgents();
+			this.actionSet.getActionCreationalCreate().submit(ccLA);
 		}
 		
 		else if(this.command.substring(0,6).equals("COMMIT"))
 		{
-			//commitString(command.substring(7));
+			int commit = 1;
+			CommandStructuralCommit cSc = new CommandStructuralCommit();
+			this.actionSet.getActionStructural().submit(cSc);
 		}
 
 		else if(this.command.substring(0,6).equals("@CLOCK"))
@@ -101,7 +111,8 @@ public class CommandParser {
 			//string is just clock
 			else
 			{
-				
+				CommandMiscDoShowClock cmSC = new CommandMiscDoShowClock();
+				this.actionSet.getActionMisc().submit(cmSC);
 			}
 		}
 		
@@ -113,17 +124,22 @@ public class CommandParser {
 		else if(this.command.substring(0,5).equals("@EXIT"))
 		{
 			//EXIT COMMAND
+			CommandMiscDoExit cmDE = new CommandMiscDoExit();
+			this.actionSet.getActionMisc().submit(cmDE);
 		}
 		
 		else if(this.command.substring(0,5).equals("@WAIT"))
 		{
 			waitString(this.command.substring(6));
 		}
-	
-		/**
-		 * need miscellaneous cmnds
-		 * and small cmnds implemented
-		 **/
+		
+		}
+		
+		catch(Exception e)
+		{
+			throw e;
+		}
+
 	}
 	
 	protected void defineString(String str)
@@ -134,7 +150,7 @@ public class CommandParser {
 		
 		try
 		{
-			if(array[0].equals("TRAP"))
+		if(array[0].equals("TRAP"))
 			{
 				//parse through string and construct list
 				int counter = 1;
@@ -369,16 +385,7 @@ public class CommandParser {
 	
 	protected void createString(String str)
 	{
-		List<List<String>> lists = new ArrayList<List<String>>();
-		List<String> decoy = new ArrayList<String>();
-		decoy.add("NOTHING");
-		
-		//set decoys so indexes can be used
-		lists.add(decoy);
-		lists.add(decoy);
-		lists.add(decoy);
-		lists.add(decoy);
-		
+		List<List<String>> lists = new ArrayList<List<String>>();	
 		List<String> commandLine = new ArrayList<String>();
 		String [] array=(str.split(" "));
 		array = eraseSpace(array);
@@ -429,7 +436,7 @@ public class CommandParser {
 				if(array[counter].equals("TANKS"))
 				{
 					int i = counter;
-					while(!array[i].equals("OVERRIDING")||!array[i].equals("AT"))
+					while(!array[i].equals("OVERRIDING")&&!array[i].equals("AT"))
 					{
 						if(i == array.length-i)
 						{break;}
@@ -849,13 +856,10 @@ public class CommandParser {
 	protected void ATdoString(String str)
 	{
 		List<List<String>> lists = new ArrayList<List<String>>();
-		List<String> decoy = new ArrayList<String>();
-		decoy.add("NOTHING");
-		lists.add(decoy);
-		lists.add(decoy);
-		lists.add(decoy);
-		lists.add(decoy);
-		lists.add(decoy);
+		for(int i = 0;i<4;i++)
+		{
+			lists.add(i,new ArrayList<String>(0));
+		}
 		List<String> commandLine = new ArrayList<String>();
 		String [] array=(str.split(" "));
 		array = eraseSpace(array);
@@ -980,11 +984,13 @@ public class CommandParser {
 	protected void setString(String str)
 	{
 		//set windConditions
+		List<String> commandLine = new ArrayList<String>();
 		String [] array = str.split(" ");
 		int counter=1;
 		
 		if(array[counter].equals("DIRECTION"))
 		{
+			commandLine.add(array[counter+1]);
 			//SEND DIRECTION
 			CommandBehavioralSetWindDirection cbDF = set_Wind_Direction(commandLine);
 			this.actionSet.getActionBehavioral().submit(cbDF);
@@ -992,6 +998,7 @@ public class CommandParser {
 		
 		else if(array[counter].equals("SPEED"))
 		{
+			commandLine.add(array[counter+1]);
 			//SEND SPEED
 			CommandBehavioralSetWindSpeed cbDF = set_Wind_Speed(commandLine);
 			this.actionSet.getActionBehavioral().submit(cbDF);
@@ -1000,55 +1007,85 @@ public class CommandParser {
 	
 	public void uncreateString(String str)
 	{
-		//CHECK IF PART OF AN AGENT
+		List<String> commandLine = new ArrayList<String>();
+		String [] array = str.split(" ");
+		int counter=1;
 		
-		//IF NOT PART THEN UNCREATE
-		//uncreate(str);
+		commandLine.add(array[0]);
+		CommandCreationalUncreate ccU = Uncreate(commandLine);
+		this.actionSet.getActionCreationalCreate().submit(ccU);
 	}//end of uncreateString
 	
 	public void describeString(String str)
 	{
+		List<String> commandLine = new ArrayList<String>();
+		String [] array = str.split(" ");
+		int counter=0;
+		commandLine.add(array[0]);
+	
 		//send tid which is remaining string
-		//describe(str);
+		CommandCreationalDescribe ccD = describe(commandLine);
+		this.actionSet.getActionCreationalCreate().submit(ccD);
 	}//end of describeString
 	
 	public void clockString(String str)
 	{
-		String [] array=(str.split(" "));
+		List<String> commandLine = new ArrayList<String>();
+		String [] array = str.split(" ");
 		int counter=0;
+		commandLine.add(array[0]);
 		
-		if(array[0].equals("RESUME"))
+		if(array[0].equals("RESUME") || array[0].equals("PAUSE"))
 		{
-			//CommandDoSetClockRunning cmd = new CommandDoSetClockRunning();
-			//this.actionset
-		}
-			
-		else if(array[0].equals("PAUSE"))
-		{
-			
+			CommandMiscDoSetClockRunning cmd = Do_Set_Clock(commandLine);
 		}
 		
 		else if(array[0].equals("UPDATE"))
 		{
-			
+			CommandMiscDoClockUpdate cmSC = Do_Set_Clock_Update(commandLine);
+			this.actionSet.getActionMisc().submit(cmSC);
 		}
 		
 		else
 		{
 			//set clock rate
+			CommandMiscDoSetClockRate cmSC = clock_Rate(commandLine);
+			this.actionSet.getActionMisc().submit(cmSC);
 		}
 	}//end of clockString
 	
 	public void runString(String str)
 	{
-		//send tid which is remaining string
-		//describe(str);
+		try
+		{
+			List<String> commandLine = new ArrayList<String>();
+			String [] array = str.split(" ");
+			int counter=0;
+			commandLine.add(array[0]);
+			
+			CommandMiscDoRun cmDR = Run(commandLine);
+			this.actionSet.getActionMisc().submit(cmDR);
+		}
+		
+		catch(Exception e)
+		{
+			throw e;
+		}
 	}//end of runString
 	
 	public void waitString(String str)
 	{
-		//send tid which is remaining string
-		//describe(str);
+		List<String> commandLine = new ArrayList<String>();
+		String [] array = str.split(" ");
+		int counter=0;
+		commandLine.add(array[0]);
+		//can't happen until after commit. commit is a global var keeping track of whether a commit was issued
+		if(commit>0)
+		{
+			CommandMiscDoWait cmDW = wait(commandLine);
+			this.actionSet.getActionMisc().submit(cmDW);
+		}
+		
 	}//end of waitString
 	
 	protected static int easyParse(List<String> commandLine,String [] array, String badWord,int counter)
@@ -1078,3 +1115,4 @@ public class CommandParser {
 		return a;
 	}//eraseSpace
 }//end of class
+
